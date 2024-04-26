@@ -22,26 +22,13 @@
 // along with SmartDec decompiler.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "IdaFrontend.h"
-
-#include "IdaWorkaroundStart.h"
-#include <ida.hpp>
-#include <segment.hpp>
-#include <bytes.hpp>
-#include <ua.hpp>
-#include <funcs.hpp> /* For get_func_name. */
-#include <demangle.hpp>
-//#include <idp.hpp> /* Required by intel.hpp. */
-#include <intel.hpp>
-#include <nalt.hpp> /* For import_node. */
-#include "IdaWorkaroundEnd.h"
-
+#include "IdaByteSource.h"
 #include <nc/common/CheckedCast.h>
 #include <nc/common/make_unique.h>
 #include <nc/core/image/Image.h>
 #include <nc/core/image/Section.h>
 
-#include "IdaByteSource.h"
+#include "IdaFrontend.h"
 
 #if IDA_SDK_VERSION >= 700
 extern "C" plugin_t PLUGIN;

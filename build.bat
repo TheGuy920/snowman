@@ -7,7 +7,7 @@ REM Setup Visual Studio Environment
 call "%VS_PATH%VC/Auxiliary/Build/vcvars64.bat"
 
 REM Remove the build directory if it exists
-if exist build rmdir /s /q build
+@REM if exist build rmdir /s /q build
 
 REM Create a new build directory
 mkdir build
@@ -29,9 +29,8 @@ if %ERRORLEVEL% neq 0 (
     mkdir "%_IDA_PATH%plugins\snowman"
     mkdir "%_IDA_PATH%plugins\snowman\plugins"
 
-    xcopy .\ida-plugin\build\Release\*.dll "%_IDA_PATH%plugins\snowman" /E /I /Y
-    xcopy .\ida-plugin\build\Release\*.conf "%_IDA_PATH%plugins\snowman" /E /I /Y
-    xcopy .\ida-plugin\build\Release\plugins\* "%_IDA_PATH%plugins\snowman\plugins" /E /I /Y
+    xcopy .\ida-plugin\Release\*.conf "%_IDA_PATH%plugins\snowman" /E /I /Y
+    xcopy .\ida-plugin\Release\*.dll "%_IDA_PATH%plugins\snowman" /E /I /Y
 )
 
 REM End local environment scope

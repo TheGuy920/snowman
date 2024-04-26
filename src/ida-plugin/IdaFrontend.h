@@ -35,10 +35,18 @@
 #include <nc/common/RangeClass.h>
 #include <nc/common/Types.h>
 #include <nc/core/image/Platform.h>
+
 #include "IdaWorkaroundStart.h"
 #include <ida.hpp>
 #include <idp.hpp>
 #include <loader.hpp>
+#include <segment.hpp>
+#include <bytes.hpp>
+#include <ua.hpp>
+#include <funcs.hpp> /* For get_func_name. */
+#include <demangle.hpp>
+#include <intel.hpp>
+#include <nalt.hpp> /* For import_node. */
 #include "IdaWorkaroundEnd.h"
 
 QT_BEGIN_NAMESPACE
