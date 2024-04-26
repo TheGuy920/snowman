@@ -21,7 +21,6 @@ add_definitions(${IDA_DEFINITIONS})
 if(MSVC)
     # IDA uses functions that MSVC considers unsafe.
     add_definitions(${IDA_DEFINITIONS} -D_CRT_SECURE_NO_WARNINGS)
-    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$:Release>")
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
