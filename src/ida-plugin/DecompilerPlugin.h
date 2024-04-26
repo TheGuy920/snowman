@@ -50,7 +50,7 @@ namespace nc
         /**
          * Decompiler IDA plugin.
          */
-        class DecompilerPlugin : public QObject, public plugmod_t
+        class DecompilerPlugin : public plugmod_t, QObject
         {
             Q_OBJECT
 

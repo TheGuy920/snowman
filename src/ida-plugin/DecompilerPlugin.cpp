@@ -269,7 +269,6 @@ namespace nc
     }
 }
 
-
 plugmod_t *idaapi init(void)
 {
     return new nc::ida::DecompilerPlugin;
@@ -279,14 +278,15 @@ plugmod_t *idaapi init(void)
 //      PLUGIN DESCRIPTION BLOCK
 //
 //--------------------------------------------------------------------------
+static const char comment[] = "Snowman decompiler plugin";
 plugin_t PLUGIN = {
-    IDP_INTERFACE_VERSION, /**< IDA version plug-in is written for. */
-    PLUGIN_MULTI|PLUGIN_PROC,          /**< Flags. */
-    init,                  /**< Initialization function. */
-    nullptr,               /**< Clean-up function. */
-    nullptr,               /**< Main plug-in body. */
-    nullptr,               /**< Comment. */
-    nullptr,               /**< Help multi-line string. */
-    "Snowman",             /**< Plug-in name shown in Edit->Plugins menu. */
-    nullptr                /**< Hot key to run the plug-in */
+    IDP_INTERFACE_VERSION,      /**< IDA version plug-in is written for. */
+    PLUGIN_MULTI | PLUGIN_HIDE, /**< Flags. */
+    init,                       /**< Initialization function. */
+    nullptr,                    /**< Clean-up function. */
+    nullptr,                    /**< Main plug-in body. */
+    comment,                    /**< Comment. */
+    "",                         /**< Help multi-line string. */
+    "Snowman",                  /**< Plug-in name shown in Edit->Plugins menu. */
+    ""                          /**< Hot key to run the plug-in */
 };
