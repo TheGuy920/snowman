@@ -43,6 +43,8 @@
 #include "IdaDemangler.h"
 #include "NavigationHelper.h"
 
+extern plugin_t PLUGIN;
+
 namespace nc
 {
     namespace ida
@@ -267,11 +269,11 @@ namespace nc
     }
 }
 
-static plugmod_t *idaapi init()
+
+plugmod_t *idaapi init(void)
 {
     return new nc::ida::DecompilerPlugin;
 }
-
 //--------------------------------------------------------------------------
 //
 //      PLUGIN DESCRIPTION BLOCK
@@ -279,7 +281,7 @@ static plugmod_t *idaapi init()
 //--------------------------------------------------------------------------
 plugin_t PLUGIN = {
     IDP_INTERFACE_VERSION, /**< IDA version plug-in is written for. */
-    PLUGIN_MULTI,          /**< Flags. */
+    PLUGIN_MULTI|PLUGIN_PROC,          /**< Flags. */
     init,                  /**< Initialization function. */
     nullptr,               /**< Clean-up function. */
     nullptr,               /**< Main plug-in body. */

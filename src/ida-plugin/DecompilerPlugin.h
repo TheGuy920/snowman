@@ -47,7 +47,6 @@ namespace nc
 
     namespace ida
     {
-
         /**
          * Decompiler IDA plugin.
          */

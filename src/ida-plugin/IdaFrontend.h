@@ -44,6 +44,7 @@
 #include <demangle.hpp>
 #include <intel.hpp>
 #include <nalt.hpp> /* For import_node. */
+#include <kernwin.hpp>
 #include "IdaWorkaroundEnd.h"
 
 QT_BEGIN_NAMESPACE
