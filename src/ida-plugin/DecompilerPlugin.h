@@ -50,79 +50,84 @@ namespace nc
     }
 }
 
-/**
- * Decompiler IDA plugin.
- */
-class DecompilerPlugin : public QObject, public plugmod_t
+namespace nc
 {
-    Q_OBJECT
+    namespace ida
+    {
 
-    Branding branding_;
+        /**
+         * Decompiler IDA plugin.
+         */
+        class DecompilerPlugin : public QObject, public plugmod_t
+        {
+            Q_OBJECT
 
-public:
-    DecompilerPlugin();
+            Branding branding_;
 
-    virtual ~DecompilerPlugin();
+        public:
+            DecompilerPlugin();
 
-    /**
-     * Decompiles the function under cursor.
-     */
-    void decompileFunction();
+            virtual ~DecompilerPlugin();
 
-    /**
-     * Decompiles the whole program.
-     */
-    void decompileProgram();
+            /**
+             * Decompiles the function under cursor.
+             */
+            void decompileFunction();
 
-    /**
-     * Main Run method.
-    */
-    virtual bool idaapi run(size_t) override;
+            /**
+             * Decompiles the whole program.
+             */
+            void decompileProgram();
 
-private:
-    std::unique_ptr<QApplication> mApplication;
+            virtual bool idaapi run(size_t) override;
 
-    /** Mapping from a function's entry address to corresponding main window. */
-    boost::unordered_map<ByteAddr, nc::gui::MainWindow *> function2window_;
+        private:
+            std::unique_ptr<QApplication> mApplication;
 
-    /** Mapping from a window to the function's entry address. */
-    boost::unordered_map<nc::gui::MainWindow *, ByteAddr> window2function_;
+            /** Mapping from a function's entry address to corresponding main window. */
+            boost::unordered_map<ByteAddr, gui::MainWindow *> function2window_;
 
-    /** Mapping from a main window to the tab QWidget of IDA. */
-    boost::unordered_map<nc::gui::MainWindow *, QWidget *> window2widget_;
+            /** Mapping from a window to the function's entry address. */
+            boost::unordered_map<gui::MainWindow *, ByteAddr> window2function_;
 
-    /** Main window decompiliing the whole program. */
-    gui::MainWindow *programWindow_;
+            /** Mapping from a main window to the tab QWidget of IDA. */
+            boost::unordered_map<gui::MainWindow *, QWidget *> window2widget_;
 
-    /** Menu items to be destroyed on destruction. */
-    std::vector<IdaFrontend::MenuItem *> menuItems_;
+            /** Main window decompiliing the whole program. */
+            gui::MainWindow *programWindow_;
 
-    /**
-     * Creates a main window inside an IDA tab widget.
-     *
-     * \return Valid pointer to the created main window, owned by IDA.
-     */
-    gui::MainWindow *createWindow();
+            /** Menu items to be destroyed on destruction. */
+            std::vector<IdaFrontend::MenuItem *> menuItems_;
 
-    /**
-     * Shows/activates the main window.
-     *
-     * \return window Valid pointer to the main window.
-     */
-    void activateWindow(nc::gui::MainWindow *window);
+            /**
+             * Creates a main window inside an IDA tab widget.
+             *
+             * \return Valid pointer to the created main window, owned by IDA.
+             */
+            gui::MainWindow *createWindow();
 
-private Q_SLOTS:
-    /**
-     * Slot handling destruction of a main window (owned by IDA).
-     *
-     * \param object Valid pointer to the main window object that was destroyed.
-     */
-    void windowDestroyed(QObject *object);
+            /**
+             * Shows/activates the main window.
+             *
+             * \return window Valid pointer to the main window.
+             */
+            void activateWindow(gui::MainWindow *window);
 
-private:
-    /**
-     * Creates a project for decompiling (a part of) the program opened in IDA.
-     * \return Valid pointer to the project.
-     */
-    std::unique_ptr<nc::gui::Project> createIdaProject() const;
-};
+        private Q_SLOTS:
+            /**
+             * Slot handling destruction of a main window (owned by IDA).
+             *
+             * \param object Valid pointer to the main window object that was destroyed.
+             */
+            void windowDestroyed(QObject *object);
+
+        private:
+            /**
+             * Creates a project for decompiling (a part of) the program opened in IDA.
+             * \return Valid pointer to the project.
+             */
+            std::unique_ptr<gui::Project> createIdaProject() const;
+        };
+
+    }
+}

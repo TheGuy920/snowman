@@ -43,216 +43,228 @@
 #include "IdaDemangler.h"
 #include "NavigationHelper.h"
 
-const char *const decompileFunctionHotkey = "F3";
-const char *const decompileProgramHotkey = "Ctrl-F3";
-
-const char *const subviewsMenuPath = "View/Open subviews";
-const char *const hexDumpMenuItem = "Hex dump";
-
-DecompilerPlugin::DecompilerPlugin() : programWindow_(NULL)
+namespace nc
 {
-    branding_ = nc::branding();
-    branding_.setApplicationName("Snowman");
-
-    assert(QApplication::instance());
-
-    menuItems_.push_back(IdaFrontend::addMenuItem(
-        subviewsMenuPath,
-        tr("Decompile a program"),
-        hexDumpMenuItem,
-        decompileProgramHotkey,
-        [this]
-        { decompileProgram(); }));
-
-    menuItems_.push_back(IdaFrontend::addMenuItem(
-        subviewsMenuPath,
-        tr("Decompile a function"),
-        hexDumpMenuItem,
-        decompileFunctionHotkey,
-        [this]
-        { decompileFunction(); }));
-
-    IdaFrontend::print(tr(
-                           "%1 plugin %2 loaded.\n"
-                           "  Press %3 to decompile the function under cursor, %4 to decompile the whole program.\n"
-                           "  Press %3 (%4) again to jump to the address under cursor.\n")
-                           .arg(branding_.applicationName())
-                           .arg(branding_.applicationVersion())
-                           .arg(decompileFunctionHotkey)
-                           .arg(decompileProgramHotkey));
-}
-
-DecompilerPlugin::~DecompilerPlugin()
-{
-    foreach (auto menuItem, menuItems_)
+    namespace ida
     {
-        IdaFrontend::deleteMenuItem(menuItem);
-    }
-}
 
-bool idaapi DecompilerPlugin::run(size_t)
-{
-    // decompileFunction();
-    // return true;
-    IdaFrontend::print("...Main.Run...");
-    return true;
-}
-
-void DecompilerPlugin::decompileFunction()
-{
-    auto functionRanges = IdaFrontend::functionAddresses(IdaFrontend::screenAddress());
-    if (functionRanges.empty())
-    {
-        QMessageBox::warning(NULL, branding_.applicationName(), tr("Please, put the text cursor inside a function that you would like to decompile."));
-        return;
-    }
-
-    ByteAddr functionAddress = functionRanges.front().start();
-
-    if (auto window = function2window_[functionAddress])
-    {
-        activateWindow(window);
-        window->jumpToAddress(IdaFrontend::screenAddress());
-        return;
-    }
-
-    auto window = createWindow();
-    window->open(createIdaProject());
-
-    window->project()->setName(IdaFrontend::functionName(functionAddress));
-
-    foreach (const AddressRange &range, functionRanges)
-    {
-        window->project()->disassemble(window->project()->image().get(), range.start(), range.end());
-    }
-
-    if (window->decompileAutomatically())
-    {
-        window->project()->decompile();
-    }
-
-    function2window_[functionAddress] = window;
-    window2function_[window] = functionAddress;
-}
-
-void DecompilerPlugin::decompileProgram()
-{
-    if (programWindow_)
-    {
-        activateWindow(programWindow_);
-        programWindow_->jumpToAddress(IdaFrontend::screenAddress());
-        return;
-    }
-
-    auto window = createWindow();
-    window->open(createIdaProject());
-    window->project()->disassemble();
-    if (window->decompileAutomatically())
-    {
-        window->project()->decompile();
-    }
-    programWindow_ = window;
-}
-
-nc::gui::MainWindow *DecompilerPlugin::createWindow()
-{
-    nc::gui::MainWindow *window = new nc::gui::MainWindow(branding_);
-    window->setWindowFlags(Qt::Widget);
-    window->setAttribute(Qt::WA_DeleteOnClose);
-
-    connect(window, SIGNAL(destroyed(QObject *)), this, SLOT(windowDestroyed(QObject *)));
-
-    QWidget *widget = IdaFrontend::createWidget(window->windowTitle());
-    widget->setLayout(new QStackedLayout());
-    widget->layout()->addWidget(window);
-
-    window->openAction()->setEnabled(false);
-    window->openAction()->setVisible(false);
-
-    window->quitAction()->setEnabled(false);
-    window->quitAction()->setVisible(false);
-
-    connect(window, SIGNAL(windowTitleChanged(const QString &)), widget, SLOT(setWindowTitle(const QString &)));
-
-    window2widget_[window] = widget;
-
-    /* Owned by MainWindow. */
-    new NavigationHelper(window);
-
-    return window;
-}
-
-void DecompilerPlugin::activateWindow(nc::gui::MainWindow *window)
-{
-    assert(window != NULL);
-
-    IdaFrontend::activateWidget(window2widget_[window]);
-}
-
-void DecompilerPlugin::windowDestroyed(QObject *object)
-{
-    /*
-     * checked_cast is not applicable here: destructor of
-     * gui::MainWindow was already called.
-     */
-    auto window = static_cast<nc::gui::MainWindow *>(object);
-
-    if (programWindow_ == window)
-    {
-        programWindow_ = NULL;
-    }
-    else
-    {
-        function2window_.erase(window2function_[window]);
-        window2function_.erase(window);
-    }
-
-    window2widget_.erase(window);
-}
-
-std::unique_ptr<nc::gui::Project> DecompilerPlugin::createIdaProject() const
-{
-    auto project = std::make_unique<nc::gui::Project>();
-    auto image = project->image().get();
-
-    /* Set architecture. */
-    image->platform().setArchitecture(IdaFrontend::architecture());
-
-    /* Set the OS. */
-    image->platform().setOperatingSystem(IdaFrontend::operatingSystem());
-
-    /* Set demangler. */
-    image->setDemangler(std::make_unique<IdaDemangler>());
-
-    /* Create sections. */
-    IdaFrontend::createSections(image);
-
-    using core::image::Relocation;
-    using core::image::Symbol;
-    using core::image::SymbolType;
-
-    /* Add function names. */
-    foreach (ByteAddr address, IdaFrontend::functionStarts())
-    {
-        QString name = IdaFrontend::functionName(address);
-
-        if (!name.isEmpty())
+        namespace
         {
-            image->addSymbol(std::make_unique<Symbol>(SymbolType::FUNCTION, name, address));
+
+            const char *const decompileFunctionHotkey = "F3";
+            const char *const decompileProgramHotkey = "Ctrl-F3";
+
+            const char *const subviewsMenuPath = "View/Open subviews";
+            const char *const hexDumpMenuItem = "Hex dump";
+
+        }
+
+        DecompilerPlugin::DecompilerPlugin() : programWindow_(NULL)
+        {
+            branding_ = nc::branding();
+            branding_.setApplicationName("Snowman");
+
+            assert(QApplication::instance());
+
+            menuItems_.push_back(IdaFrontend::addMenuItem(
+                subviewsMenuPath,
+                tr("Decompile a program"),
+                hexDumpMenuItem,
+                decompileProgramHotkey,
+                [this]
+                { decompileProgram(); }));
+
+            menuItems_.push_back(IdaFrontend::addMenuItem(
+                subviewsMenuPath,
+                tr("Decompile a function"),
+                hexDumpMenuItem,
+                decompileFunctionHotkey,
+                [this]
+                { decompileFunction(); }));
+
+            IdaFrontend::print(tr(
+                                   "%1 plugin %2 loaded.\n"
+                                   "  Press %3 to decompile the function under cursor, %4 to decompile the whole program.\n"
+                                   "  Press %3 (%4) again to jump to the address under cursor.\n")
+                                   .arg(branding_.applicationName())
+                                   .arg(branding_.applicationVersion())
+                                   .arg(decompileFunctionHotkey)
+                                   .arg(decompileProgramHotkey));
+        }
+
+        DecompilerPlugin::~DecompilerPlugin()
+        {
+            foreach (auto menuItem, menuItems_)
+            {
+                IdaFrontend::deleteMenuItem(menuItem);
+            }
+        }
+
+        bool idaapi DecompilerPlugin::run(size_t)
+        {
+            // decompileFunction();
+            // return true;
+            IdaFrontend::print("...Main.Run...");
+            return true;
+        }
+
+        void DecompilerPlugin::decompileFunction()
+        {
+            auto functionRanges = IdaFrontend::functionAddresses(IdaFrontend::screenAddress());
+            if (functionRanges.empty())
+            {
+                QMessageBox::warning(NULL, branding_.applicationName(), tr("Please, put the text cursor inside a function that you would like to decompile."));
+                return;
+            }
+
+            ByteAddr functionAddress = functionRanges.front().start();
+
+            if (auto window = function2window_[functionAddress])
+            {
+                activateWindow(window);
+                window->jumpToAddress(IdaFrontend::screenAddress());
+                return;
+            }
+
+            auto window = createWindow();
+            window->open(createIdaProject());
+
+            window->project()->setName(IdaFrontend::functionName(functionAddress));
+
+            foreach (const AddressRange &range, functionRanges)
+            {
+                window->project()->disassemble(window->project()->image().get(), range.start(), range.end());
+            }
+
+            if (window->decompileAutomatically())
+            {
+                window->project()->decompile();
+            }
+
+            function2window_[functionAddress] = window;
+            window2function_[window] = functionAddress;
+        }
+
+        void DecompilerPlugin::decompileProgram()
+        {
+            if (programWindow_)
+            {
+                activateWindow(programWindow_);
+                programWindow_->jumpToAddress(IdaFrontend::screenAddress());
+                return;
+            }
+
+            auto window = createWindow();
+            window->open(createIdaProject());
+            window->project()->disassemble();
+            if (window->decompileAutomatically())
+            {
+                window->project()->decompile();
+            }
+            programWindow_ = window;
+        }
+
+        gui::MainWindow *DecompilerPlugin::createWindow()
+        {
+            gui::MainWindow *window = new gui::MainWindow(branding_);
+            window->setWindowFlags(Qt::Widget);
+            window->setAttribute(Qt::WA_DeleteOnClose);
+
+            connect(window, SIGNAL(destroyed(QObject *)), this, SLOT(windowDestroyed(QObject *)));
+
+            QWidget *widget = IdaFrontend::createWidget(window->windowTitle());
+            widget->setLayout(new QStackedLayout());
+            widget->layout()->addWidget(window);
+
+            window->openAction()->setEnabled(false);
+            window->openAction()->setVisible(false);
+
+            window->quitAction()->setEnabled(false);
+            window->quitAction()->setVisible(false);
+
+            connect(window, SIGNAL(windowTitleChanged(const QString &)), widget, SLOT(setWindowTitle(const QString &)));
+
+            window2widget_[window] = widget;
+
+            /* Owned by MainWindow. */
+            new NavigationHelper(window);
+
+            return window;
+        }
+
+        void DecompilerPlugin::activateWindow(gui::MainWindow *window)
+        {
+            assert(window != NULL);
+
+            IdaFrontend::activateWidget(window2widget_[window]);
+        }
+
+        void DecompilerPlugin::windowDestroyed(QObject *object)
+        {
+            /*
+             * checked_cast is not applicable here: destructor of
+             * gui::MainWindow was already called.
+             */
+            auto window = static_cast<gui::MainWindow *>(object);
+
+            if (programWindow_ == window)
+            {
+                programWindow_ = NULL;
+            }
+            else
+            {
+                function2window_.erase(window2function_[window]);
+                window2function_.erase(window);
+            }
+
+            window2widget_.erase(window);
+        }
+
+        std::unique_ptr<gui::Project> DecompilerPlugin::createIdaProject() const
+        {
+            auto project = std::make_unique<gui::Project>();
+            auto image = project->image().get();
+
+            /* Set architecture. */
+            image->platform().setArchitecture(IdaFrontend::architecture());
+
+            /* Set the OS. */
+            image->platform().setOperatingSystem(IdaFrontend::operatingSystem());
+
+            /* Set demangler. */
+            image->setDemangler(std::make_unique<IdaDemangler>());
+
+            /* Create sections. */
+            IdaFrontend::createSections(image);
+
+            using core::image::Relocation;
+            using core::image::Symbol;
+            using core::image::SymbolType;
+
+            /* Add function names. */
+            foreach (ByteAddr address, IdaFrontend::functionStarts())
+            {
+                QString name = IdaFrontend::functionName(address);
+
+                if (!name.isEmpty())
+                {
+                    image->addSymbol(std::make_unique<Symbol>(SymbolType::FUNCTION, name, address));
+                }
+            }
+
+            /* Add imported function names. */
+            typedef std::pair<ByteAddr, QString> Import;
+            foreach (const Import &import, IdaFrontend::importedFunctions())
+            {
+                image->addRelocation(std::make_unique<Relocation>(
+                    import.first,
+                    image->addSymbol(std::make_unique<Symbol>(SymbolType::FUNCTION, import.second, boost::none)),
+                    image->platform().architecture()->bitness() / CHAR_BIT));
+            }
+
+            return project;
         }
     }
-
-    /* Add imported function names. */
-    typedef std::pair<ByteAddr, QString> Import;
-    foreach (const Import &import, IdaFrontend::importedFunctions())
-    {
-        image->addRelocation(std::make_unique<Relocation>(
-            import.first,
-            image->addSymbol(std::make_unique<Symbol>(SymbolType::FUNCTION, import.second, boost::none)),
-            image->platform().architecture()->bitness() / CHAR_BIT));
-    }
-
-    return project;
 }
 
 static plugmod_t *idaapi init()
@@ -265,7 +277,7 @@ static plugmod_t *idaapi init()
 //      PLUGIN DESCRIPTION BLOCK
 //
 //--------------------------------------------------------------------------
-plugin_t PLUGIN = {
+__declspec(dllexport) plugin_t PLUGIN = {
     IDP_INTERFACE_VERSION, /**< IDA version plug-in is written for. */
     PLUGIN_MULTI,          /**< Flags. */
     init,                  /**< Initialization function. */
