@@ -277,7 +277,7 @@ static plugmod_t *idaapi init()
 //      PLUGIN DESCRIPTION BLOCK
 //
 //--------------------------------------------------------------------------
-__declspec(dllexport) plugin_t PLUGIN = {
+plugin_t PLUGIN = {
     IDP_INTERFACE_VERSION, /**< IDA version plug-in is written for. */
     PLUGIN_MULTI,          /**< Flags. */
     init,                  /**< Initialization function. */

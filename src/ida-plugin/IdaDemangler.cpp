@@ -23,16 +23,15 @@
 //
 
 #include "IdaDemangler.h"
-
 #include "IdaFrontend.h"
 
-namespace nc {
-namespace ida {
-
-QString IdaDemangler::demangle(const QString &symbol) const {
-    return IdaFrontend::demangle(symbol);
+namespace nc
+{
+    namespace ida
+    {
+        QString IdaDemangler::demangle(const QString &symbol) const
+        {
+            return IdaFrontend::demangle(symbol);
+        }
+    }
 }
-
-}} // namespace nc::ida
-
-/* vim:set et sts=4 sw=4: */

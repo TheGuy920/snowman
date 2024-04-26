@@ -24,13 +24,9 @@
 #pragma once
 
 #include <nc/config.h>
-
 #include <QObject>
-
 #include <memory>
-
 #include <boost/unordered_map.hpp>
-
 #include <nc/common/Branding.h>
 #include <nc/common/Types.h>
 
@@ -48,10 +44,7 @@ namespace nc
         class MainWindow;
         class Project;
     }
-}
 
-namespace nc
-{
     namespace ida
     {
 
