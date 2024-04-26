@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "command": "${workspaceFolder}/build.bat",
+            "name": "Build (Windows)",
+            "request": "launch",
+            "type": "node-terminal"
+        },
+        {
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/snowman/Release/snowman.exe",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": []
+        }
+    ]
+}

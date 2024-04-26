@@ -35,6 +35,11 @@
 #include <nc/common/RangeClass.h>
 #include <nc/common/Types.h>
 #include <nc/core/image/Platform.h>
+#include "IdaWorkaroundStart.h"
+#include <ida.hpp>
+#include <idp.hpp>
+#include <loader.hpp>
+#include "IdaWorkaroundEnd.h"
 
 QT_BEGIN_NAMESPACE
 class QApplication;

@@ -11,8 +11,6 @@ set(SOURCES
     IdaDemangler.h
     IdaFrontend.cpp
     IdaFrontend.h
-    IdaPlugin.cpp
-    IdaPlugin.h
     NavigationHelper.cpp
     ${MOC_HEADERS}
 )
@@ -23,6 +21,7 @@ add_definitions(${IDA_DEFINITIONS})
 if(MSVC)
     # IDA uses functions that MSVC considers unsafe.
     add_definitions(${IDA_DEFINITIONS} -D_CRT_SECURE_NO_WARNINGS)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$:Release>")
 endif()
 
 if(${CMAKE_CXX_COMPILER_ID} MATCHES "GNU")
@@ -35,11 +34,9 @@ if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     add_definitions(-Wno-ignored-attributes -Wno-format-security -Wno-logical-op-parentheses)
 endif()
 
-qt4_wrap_cpp(SOURCES ${MOC_HEADERS} OPTIONS -DQ_MOC_RUN)
+qt5_wrap_cpp(SOURCES ${MOC_HEADERS})
 
 add_library(ida-plugin SHARED ${SOURCES})
 target_link_libraries(ida-plugin nc nc-gui ${Boost_LIBRARIES} ${NC_QT_CORE} ${NC_QT_WIDGETS} ${IDA_LIBRARIES})
 set_target_properties(ida-plugin PROPERTIES OUTPUT_NAME "snowman" PREFIX "" SUFFIX "${IDA_PLUGIN_EXT}")
 install(TARGETS ida-plugin RUNTIME DESTINATION bin LIBRARY DESTINATION lib)
-
-# vim:set et sts=4 sw=4 nospell:
